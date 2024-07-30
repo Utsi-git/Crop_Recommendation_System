@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Results Page</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h1>Recommended Crops</h1>
+    <ul>
+        {% for crop in crops %}
+            <li>
+                <h2>{{ crop["crop"] }}</h2>
+                <img src="{{ url_for('static', filename='/Users/utsav/Documents/PCL-2/Code/Website/templates/crop_images' + crop["picture"]) }}" alt="{{ crop["crop"] }}">
+
+                <p>{{ crop["text"] }}</p>
+            </li>
+        {% endfor %}
+    </ul>
+    <a href="/">Try again</a>
+</body>
+</html>

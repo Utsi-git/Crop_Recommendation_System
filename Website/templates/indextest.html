@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crop Recommendation Integrated System using ML</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            padding: 0;
+            background: #f4f4f4;
+        }
+
+        h1 {
+            color: green;
+        }
+
+        .data-container {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .form-heading {
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        input[type="text"], input[type="hidden"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+
+        button {
+            cursor: pointer;
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #218838;
+        }
+    </style>
+</head>
+<body>
+    <h1>Crop Recommendation Integrated System using ML</h1>
+    <div class="data-container">
+        <div class="form-heading">Enter Location Information</div>
+        <input type="text" id="state" placeholder="Enter State or Use 'Auto Detect'">
+        <button onclick="autoDetectLocation()">Auto Detect Location</button>
+        <button type="button" id="getWeather" onclick="getWeather()">Get Weather Details</button>
+        <div class="form-heading">Soil Nutrients Levels</div>
+        <label for="Nitrogen">Nitrogen</label>
+        <input type="text" id="Nitrogen" placeholder="Enter Nitrogen level">
+        <label for="Potassium">Potassium</label>
+        <input type="text" id="Potassium" placeholder="Enter Potassium level">
+        <label for="Phosphorus">Phosphorus</label>
+        <input type="text" id="Phosphorus" placeholder="Enter Phosphorus level">
+        <label for="ph">PH</label>
+        <input type="text" id="ph" placeholder="Enter PH level">
+        <label for="temperature">Temperature</label>
+        <input type="text" id="temperature" placeholder="Enter Temperature">
+        <label for="rainfall">Rainfall</label>
+        <input type="text" id="rainfall" placeholder="Enter Rainfall level">
+        <label for="humidity">Humidity</label>
+        <input type="text" id="humidity" placeholder="Enter Humidity Level">
+        <button type="button" id="submitForm" onclick="submitSoilForm()">Submit</button>
+    </div>
+    <script>
+        let currentLatitude = 0;
+        let currentLongitude = 0;
+
+        function autoDetectLocation() {
+            if ('geolocation' in navigator) {
+                navigator.geolocation.getCurrentPosition(function(position) {
+                    currentLatitude = position.coords.latitude;
+                    currentLongitude = position.coords.longitude;
+
+                    fetch(`https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${currentLatitude}&longitude=${currentLongitude}&localityLanguage=en`)
+                    .then(response => response.json())
+                    .then(data => {
+                        document.getElementById('state').value = data.localityInfo.administrative[1].name; // Typically, this would be the state or region
+                        alert('Location detected: ' + data.localityInfo.administrative[1].name);
+                    })
+                    .catch(error => {
+                        alert('Unable to retrieve location data: ' + error);
+                    });
+                }, function(error) {
+                    alert('Error occurred. Error code: ' + error.code);
+                });
+            } else {
+                alert('Geolocation is not supported by this browser.');
+            }
+        }
+
+        function getWeather() {
+            const apiKey = '5a6167a0a92b9db899444c310fcacc1d'; // Replace with your actual API key
+            fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${currentLatitude}&lon=${currentLongitude}&appid=${apiKey}&units=metric`)
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('temperature').value = data.main.temp;
+                document.getElementById('humidity').value = data.main.humidity;
+                document.getElementById('rainfall').value = data.rain ? data.rain['1h'] : 0; // Check for rain data, default to 0 if none
+                alert('Weather details updated!');
+            })
+            .catch(error => {
+                console.error('Failed to retrieve weather data:', error);
+                alert('Failed to retrieve weather data');
+            });
+        }
+
+        function submitSoilForm() {
+            event.preventDefault();  // Prevent the form from submitting in the traditional way
+            const data = {
+                state: document.getElementById('state').value,
+                nitrogen: document.getElementById('Nitrogen').value,
+                potassium: document.getElementById('Potassium').value,
+                phosphorus: document.getElementById('Phosphorus').value,
+                ph: document.getElementById('ph').value,
+                temperature: document.getElementById('temperature').value,
+                rainfall: document.getElementById('rainfall').value,
+                humidity: document.getElementById('humidity').value
+            };
+
+            fetch('/submit', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.redirect) {
+                    window.location.href = data.redirect;
+                } else {
+                    console.error('No redirect URL provided.');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+            });
+        }
+    </script>
+    
+</body>
+</html>
