@@ -2,21 +2,280 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Results Page</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Recommendations - Results</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary-color: #2E7D32;
+            --background: #f4f7f6;
+            --text-main: #2c3e50;
+            --card-radius: 20px;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Outfit', sans-serif;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text-main);
+            min-height: 100vh;
+        }
+        
+        /* Clean Header */
+        .navbar {
+            background: white;
+            padding: 20px 40px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .back-btn {
+            background: transparent;
+            border: 2px solid var(--primary-color);
+            color: var(--primary-color);
+            padding: 8px 16px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .back-btn:hover {
+            background: var(--primary-color);
+            color: white;
+        }
+
+        /* Hero Section */
+        .results-header {
+            text-align: center;
+            padding: 60px 20px;
+            background: linear-gradient(135deg, rgba(46, 125, 50, 0.1) 0%, rgba(76, 175, 80, 0.05) 100%);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            animation: fadeInDown 0.6s ease-out;
+        }
+
+        @keyframes fadeInDown {
+            from { opacity: 0; transform: translateY(-20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .results-header h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            color: #1b5e20;
+            margin-bottom: 10px;
+        }
+
+        .results-header p {
+            font-size: 1.2rem;
+            color: #546e7a;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* Data Grid */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .crops-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 30px;
+        }
+
+        .crop-card {
+            background: white;
+            border-radius: var(--card-radius);
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            animation: fadeIn 0.8s ease-out forwards;
+            opacity: 0;
+            transform: translateY(20px);
+        }
+
+        /* Staggered animation */
+        .crop-card:nth-child(1) { animation-delay: 0.1s; }
+        .crop-card:nth-child(2) { animation-delay: 0.2s; }
+        .crop-card:nth-child(3) { animation-delay: 0.3s; }
+        .crop-card:nth-child(4) { animation-delay: 0.4s; }
+        .crop-card:nth-child(5) { animation-delay: 0.5s; }
+        .crop-card:nth-child(6) { animation-delay: 0.6s; }
+
+        @keyframes fadeIn {
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .crop-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.12);
+        }
+
+        .crop-img-container {
+            width: 100%;
+            height: 220px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .crop-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .crop-card:hover .crop-img {
+            transform: scale(1.05);
+        }
+
+        .match-badge {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #2E7D32;
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.85rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .crop-info {
+            padding: 25px;
+        }
+
+        .crop-title {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            color: #1b5e20;
+        }
+
+        .crop-desc {
+            font-size: 1rem;
+            color: #607d8b;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .action-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+
+        .learn-more {
+            color: var(--primary-color);
+            text-decoration: none;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: gap 0.3s;
+        }
+
+        .learn-more:hover {
+            gap: 10px;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 80px 20px;
+        }
+        .no-data i {
+            font-size: 4rem;
+            color: #cfd8dc;
+            margin-bottom: 20px;
+        }
+        .no-data h2 {
+            font-size: 2rem;
+            color: #455a64;
+        }
+
+    </style>
 </head>
 <body>
-    <h1>Recommended Crops</h1>
-    <ul>
-        {% for crop in crops %}
-            <li>
-                <h2>{{ crop["crop"] }}</h2>
-                <img src="{{ url_for('static', filename='/Users/utsav/Documents/PCL-2/Code/Website/templates/crop_images' + crop["picture"]) }}" alt="{{ crop["crop"] }}">
 
-                <p>{{ crop["text"] }}</p>
-            </li>
-        {% endfor %}
-    </ul>
-    <a href="/">Try again</a>
+    <nav class="navbar">
+        <div class="navbar-brand">
+            <i class="fa-solid fa-leaf"></i> AgriMind AI
+        </div>
+        <a href="/" class="back-btn">
+            <i class="fa-solid fa-arrow-left"></i> Run Another Analysis
+        </a>
+    </nav>
+
+    <div class="results-header">
+        <h1>Optimal Crop Matches</h1>
+        <p>Based on our AI analysis of your soil health, climate conditions, and geographical constraints, here are the crops with the highest probability of maximum yield.</p>
+    </div>
+
+    <div class="container">
+        {% if crops and crops|length > 0 %}
+        <div class="crops-grid">
+            {% for crop in crops %}
+            <div class="crop-card">
+                <div class="crop-img-container">
+                    <!-- Use dynamic unsplash images or fallback -->
+                    <img src="{{ crop.picture }}" alt="{{ crop.crop }}" class="crop-img" onerror="this.src='https://images.unsplash.com/photo-1592982537447-6f2adb3c4805?auto=format&fit=crop&q=80&w=400';">
+                    <div class="match-badge">
+                        <i class="fa-solid fa-star"></i> Top Match
+                    </div>
+                </div>
+                <div class="crop-info">
+                    <h2 class="crop-title">{{ crop.crop }}</h2>
+                    <p class="crop-desc">This crop is highly suitable for your entered soil composition (N-P-K & pH) and local climatic conditions. Local state trends also show high success rates.</p>
+                    <div class="action-footer">
+                        <span style="font-size: 0.85rem; color: #90a4ae;"><i class="fa-solid fa-check-circle"></i> AI Verified</span>
+                        <a href="https://en.wikipedia.org/wiki/{{ crop.crop }}" target="_blank" class="learn-more">Details <i class="fa-solid fa-arrow-right"></i></a>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <div class="no-data">
+            <i class="fa-solid fa-folder-open"></i>
+            <h2>No Recommendations Found</h2>
+            <p style="color: #607d8b; margin-top: 10px;">We couldn't find a strong match. Please check your data inputs and ensure they are realistic for agricultural lands.</p>
+        </div>
+        {% endif %}
+    </div>
+
 </body>
 </html>

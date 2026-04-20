@@ -9,14 +9,10 @@ app = Flask(__name__)
 CORS(app)
 app.secret_key = '123'
 
-from keras.models import load_model
-import os
-os.chdir('/Users/utsav/Documents/PCL-2/Code/Website')
-
 # Ensure the model path is correct
+from keras.models import load_model
 model_path = 'crop_recommendation_model.keras'
 model = load_model(model_path)
-
 @app.route('/')
 def home():
     return render_template('index.html')
@@ -49,9 +45,7 @@ def submit():
 
 
         states_dict = {
-            "Andhra Pradesh":[  {"crop": "Rice", "picture": "rice.jpeg", "text": "Rice is a staple food crop."},
-        {"crop": "Maize", "picture": "maize.jpeg", "text": "Maize is used for various purposes including human consumption, animal feed, and industrial uses."},  {"crop": "Soyabean", "picture": "rice.jpeg", "text": "Rice is a staple food crop."},
-        {"crop": "Coffee", "picture": "maize.jpeg", "text": "Maize is used for various purposes including human consumption, animal feed, and industrial uses."} ],
+            "Andhra Pradesh": ["Rice", "Maize", "Soyabean", "Coffee"],
             "Arunachal Pradesh": ["Rice", "Maize", "Millet", "Ginger", "Chillies", "Oilseeds", "Orange"],
             "Assam": ["Tea", "Rice", "Maize", "Jute", "Pulses", "Oilseeds", "Sugarcane"],
             "Bihar": ["Rice", "Wheat", "Maize", "Pulses", "Oilseeds", "Sugarcane", "Jute"],
@@ -86,7 +80,12 @@ def submit():
             state_crops = [crop.lower() for crop in states_dict[state_input]]
             for crop in top_20_crops:
                 if crop in state_crops:
-                    crop_list.append(crop)
+                    # Provide rich info for the UI
+                    crop_info = {
+                        "crop": crop.capitalize(),
+                        "picture": url_for('static', filename=f"images/crops/{crop}.jpg")
+                    }
+                    crop_list.append(crop_info)
 
 # Store results in session
         session['recommendedCrops'] = crop_list  # Assuming crop_list is defined as per your processing logic
